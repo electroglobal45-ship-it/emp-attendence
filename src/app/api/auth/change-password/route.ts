@@ -127,6 +127,10 @@ export async function POST(req: NextRequest) {
       message: 'Password changed successfully',
       token: newAuthData.session.access_token,
       session: newAuthData.session,
+      user: {
+        id: user.id,
+        email: profile.email,
+      },
     })
   } catch (error) {
     console.error('❌ Change password error:', error)

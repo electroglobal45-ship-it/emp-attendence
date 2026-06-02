@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 
 export default function SettingsPage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, refreshUser } = useAuth()
   const [office, setOffice] = useState({ name: '', latitude: '', longitude: '', radiusMeters: '100' })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -103,6 +103,11 @@ export default function SettingsPage() {
         if (data.token) {
           localStorage.setItem('authToken', data.token)
           console.log('✅ Auth token updated after password change')
+          
+          // CRITICAL: Refresh user session to sync with new token
+          console.log('🔄 Refreshing user session...')
+          await refreshUser()
+          console.log('✅ User session refreshed')
         }
         
         // Handle require login case

@@ -11,7 +11,7 @@ interface ChangePasswordModalProps {
 }
 
 export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswordModalProps) {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -69,6 +69,20 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
         if (data.token) {
           localStorage.setItem('authToken', data.token)
           console.log('✅ Auth token updated in localStorage')
+          
+          // Update user in localStorage if provided
+          if (data.user) {
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+            localStorage.setItem('user', JSON.stringify({
+              ...currentUser,
+              ...data.user
+            }))
+          }
+          
+          // CRITICAL: Refresh user session in AuthContext to sync with new token
+          console.log('🔄 Refreshing user session after password change...')
+          await refreshUser()
+          console.log('✅ User session refreshed')
         }
         
         // If password changed but requires re-login
