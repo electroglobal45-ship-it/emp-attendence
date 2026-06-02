@@ -26,6 +26,7 @@ export default function AttendancePage() {
   const [submitting,    setSubmitting]    = useState(false)
   const [submitMsg,     setSubmitMsg]     = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [todayRecord,   setTodayRecord]   = useState<any>(null)
+  const [loadingTodayRecord, setLoadingTodayRecord] = useState(true) // NEW: Track if we're still loading today's record
   
   // Markout states
   const [markoutMode,      setMarkoutMode]      = useState(false)
@@ -139,6 +140,7 @@ export default function AttendancePage() {
 
   useEffect(() => {
     if (!user) return
+    setLoadingTodayRecord(true) // Start loading
     const t = localStorage.getItem('authToken')
     fetch(`/api/attendance/today`, { headers: { Authorization: `Bearer ${t}` } })
       .then(r => r.json())
@@ -149,6 +151,9 @@ export default function AttendancePage() {
       })
       .catch((err) => {
         console.error('Error fetching today attendance:', err)
+      })
+      .finally(() => {
+        setLoadingTodayRecord(false) // Done loading
       })
   }, [user])
 
@@ -161,7 +166,7 @@ export default function AttendancePage() {
     }
   }, [])
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  if (isLoading || loadingTodayRecord) return <div className="min-h-screen flex items-center justify-center"><Loader2 size={32} className="animate-spin text-gray-400" /></div>
   if (!user)     return null
 
   // Render UI showing attendance already marked - prevent any action
@@ -218,16 +223,33 @@ export default function AttendancePage() {
   }
 
   const handleOpenCamera = async () => {
-    // Prevent opening camera if already checked in (for check-in mode)
-    if (!markoutMode && alreadyCheckedIn) {
-      setSubmitMsg({ type: 'error', text: 'Attendance already marked for today. You cannot mark again.' })
-      return
-    }
-
-    // Check if attendance is blocked
-    if (!markoutMode && attendanceBlocked) {
-      setSubmitMsg({ type: 'error', text: blockReason })
-      return
+    // IMPORTANT: Check attendance status FIRST before opening camera
+    if (!markoutMode) {
+      // For check-in mode, verify attendance is not already marked
+      const t = localStorage.getItem('authToken')
+      try {
+        setSubmitMsg({ type: 'success', text: 'Checking attendance status...' })
+        const checkRes = await fetch('/api/attendance/today', { 
+          headers: { Authorization: `Bearer ${t}` } 
+        })
+        const checkData = await checkRes.json()
+        
+        if (checkData.attendance?.check_in) {
+          // Attendance already marked!
+          setTodayRecord(checkData.attendance)
+          setSubmitMsg({ type: 'error', text: 'Attendance already marked for today. You cannot mark again.' })
+          return
+        }
+      } catch (err) {
+        console.error('Error checking attendance:', err)
+        // Continue anyway if check fails
+      }
+      
+      // Check if attendance is blocked
+      if (attendanceBlocked) {
+        setSubmitMsg({ type: 'error', text: blockReason })
+        return
+      }
     }
 
     if (markoutMode) {

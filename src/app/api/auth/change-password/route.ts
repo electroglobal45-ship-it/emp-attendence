@@ -99,11 +99,34 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('✅ Password updated in Supabase Auth')
+
+    // Step 3: Generate new session with the new password
+    // This ensures the user stays logged in with a valid token
+    console.log('🔄 Generating new session with updated password')
+    const { data: newAuthData, error: signInError } = await supabaseServer.auth.signInWithPassword({
+      email: profile.email,
+      password: newPassword,
+    })
+
+    if (signInError || !newAuthData.session) {
+      console.error('❌ Failed to generate new session:', signInError)
+      // Password was updated but session refresh failed
+      // User will need to login again manually
+      return NextResponse.json({
+        success: true,
+        message: 'Password changed successfully. Please login again.',
+        requireLogin: true,
+      })
+    }
+
+    console.log('✅ New session generated')
     console.log('✅ Password changed successfully for user:', user.id)
 
     return NextResponse.json({
       success: true,
       message: 'Password changed successfully',
+      token: newAuthData.session.access_token,
+      session: newAuthData.session,
     })
   } catch (error) {
     console.error('❌ Change password error:', error)

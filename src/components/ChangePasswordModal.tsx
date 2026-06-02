@@ -65,6 +65,23 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
       if (!res.ok) {
         setMessage({ type: 'error', text: data.error || 'Failed to change password' })
       } else {
+        // Update token in localStorage if new token is provided
+        if (data.token) {
+          localStorage.setItem('authToken', data.token)
+          console.log('✅ Auth token updated in localStorage')
+        }
+        
+        // If password changed but requires re-login
+        if (data.requireLogin) {
+          setMessage({ type: 'success', text: 'Password changed! Please login again.' })
+          setTimeout(() => {
+            localStorage.removeItem('authToken')
+            localStorage.removeItem('user')
+            window.location.href = '/'
+          }, 2000)
+          return
+        }
+        
         setMessage({ type: 'success', text: 'Password changed successfully!' })
         setOldPassword('')
         setNewPassword('')

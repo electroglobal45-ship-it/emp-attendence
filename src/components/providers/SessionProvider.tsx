@@ -96,6 +96,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!response.ok) {
       throw new Error(data.error || 'Failed to change password')
     }
+
+    // Update token if a new one is provided
+    if (data.token) {
+      localStorage.setItem('authToken', data.token)
+      setToken(data.token)
+      console.log('✅ Session token refreshed after password change')
+    }
+
+    // If requires re-login, clear session
+    if (data.requireLogin) {
+      logout()
+      throw new Error('Password changed. Please login again.')
+    }
   }
 
   return (

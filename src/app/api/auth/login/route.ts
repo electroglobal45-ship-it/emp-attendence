@@ -59,6 +59,25 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ Login successful for:', profile.email, 'role:', profile.role)
 
+    // 🔍 Log session creation for audit trail
+    try {
+      await supabaseServer.from('session_audit').insert({
+        user_id: profile.id,
+        email: profile.email,
+        action: 'login',
+        ip_address: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+        user_agent: req.headers.get('user-agent') || 'unknown',
+        device_info: JSON.stringify({
+          platform: req.headers.get('sec-ch-ua-platform'),
+          mobile: req.headers.get('sec-ch-ua-mobile'),
+        }),
+      })
+      console.log('✅ Session audit logged for:', profile.email)
+    } catch (auditError) {
+      console.error('⚠️ Failed to log session audit:', auditError)
+      // Don't fail login if audit logging fails
+    }
+
     return NextResponse.json({
       success: true,
       token: authData.session.access_token, // Add this for compatibility

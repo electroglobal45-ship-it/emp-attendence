@@ -48,6 +48,16 @@ export async function getAuthenticatedUser(req: NextRequest) {
       return null
     }
 
+    // 🔍 SECURITY AUDIT LOG - Track who is using whose token
+    console.log('🔐 [SECURITY AUDIT]', {
+      authenticated_user_id: user.id,
+      authenticated_email: profile.email,
+      user_agent: req.headers.get('user-agent'),
+      ip_address: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+      endpoint: req.url,
+      timestamp: new Date().toISOString(),
+    })
+
     console.log('✅ User authenticated:', profile.email, 'role:', profile.role)
 
     return {

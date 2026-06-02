@@ -84,17 +84,38 @@ export default function SettingsPage() {
       const token = localStorage.getItem('authToken')
       const res = await fetch('/api/auth/change-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}` 
+        },
         body: JSON.stringify({
           employeeId: user?.id,
           oldPassword: passwordForm.oldPassword,
           newPassword: passwordForm.newPassword,
         }),
       })
+      const data = await res.json()
+      
       if (!res.ok) {
-        const data = await res.json()
         setPasswordError(data.error || 'Failed to change password')
       } else {
+        // Update token if new one provided
+        if (data.token) {
+          localStorage.setItem('authToken', data.token)
+          console.log('✅ Auth token updated after password change')
+        }
+        
+        // Handle require login case
+        if (data.requireLogin) {
+          setPasswordError('Password changed. Please login again.')
+          setTimeout(() => {
+            localStorage.removeItem('authToken')
+            localStorage.removeItem('user')
+            window.location.href = '/'
+          }, 2000)
+          return
+        }
+        
         setPasswordSaved(true)
         setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' })
         setTimeout(() => setPasswordSaved(false), 3000)
