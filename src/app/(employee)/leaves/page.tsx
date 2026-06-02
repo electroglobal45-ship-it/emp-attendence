@@ -157,7 +157,7 @@ export default function LeavesPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      {['Type','From','To','Days','Status','Sandwich'].map(h => (
+                      {['Type','From','To','Days','Reason','Status'].map(h => (
                         <th key={h} className="text-left px-3 sm:px-4 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -167,14 +167,16 @@ export default function LeavesPage() {
                       <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">No leave requests yet</td></tr>
                     ) : leaves.map(l => (
                       <tr key={l.id} className="hover:bg-gray-50">
-                        <td className="px-3 sm:px-4 py-3 capitalize whitespace-nowrap">{l.type || l.leave_type}</td>
-                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap">{l.start_date}</td>
-                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap">{l.end_date}</td>
-                        <td className="px-3 sm:px-4 py-3">{l.total_days ?? '—'}</td>
-                        <td className="px-3 sm:px-4 py-3"><span className={statusBadge(l.status)}>{l.status}</span></td>
-                        <td className="px-3 sm:px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
-                          {l.is_sandwich_applied ? `+${l.sandwich_days?.length ?? 0} days` : '—'}
+                        <td className="px-3 sm:px-4 py-3 capitalize whitespace-nowrap text-xs sm:text-sm">{(l.type || l.leave_type || '').replace(/_/g, ' ')}</td>
+                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs sm:text-sm">{l.start_date}</td>
+                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs sm:text-sm">{l.end_date}</td>
+                        <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm">{l.total_days ?? '—'}</td>
+                        <td className="px-3 sm:px-4 py-3" style={{ minWidth: '200px', maxWidth: '400px' }}>
+                          <div className="text-xs sm:text-sm text-gray-700 whitespace-normal break-words" style={{ wordBreak: 'break-word' }} title={l.reason || '—'}>
+                            {l.reason || '—'}
+                          </div>
                         </td>
+                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap"><span className={statusBadge(l.status)}>{l.status}</span></td>
                       </tr>
                     ))}
                   </tbody>
@@ -227,21 +229,24 @@ export default function LeavesPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      {['Date','Type','Reason','Att. Value','Status'].map(h => (
+                      {['Date','Type','Reason','Status'].map(h => (
                         <th key={h} className="text-left px-3 sm:px-4 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {shortLeaves.length === 0 ? (
-                      <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">No short leave requests yet</td></tr>
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-sm">No short leave requests yet</td></tr>
                     ) : shortLeaves.map(sl => (
                       <tr key={sl.id} className="hover:bg-gray-50">
-                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap">{sl.date}</td>
-                        <td className="px-3 sm:px-4 py-3 capitalize whitespace-nowrap">{sl.type}</td>
-                        <td className="px-3 sm:px-4 py-3 text-gray-600 max-w-xs truncate">{sl.reason || '—'}</td>
-                        <td className="px-3 sm:px-4 py-3">{sl.attendance_value}</td>
-                        <td className="px-3 sm:px-4 py-3"><span className={statusBadge(sl.status)}>{sl.status}</span></td>
+                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs sm:text-sm">{sl.date}</td>
+                        <td className="px-3 sm:px-4 py-3 capitalize whitespace-nowrap text-xs sm:text-sm">{sl.short_leave_type}</td>
+                        <td className="px-3 sm:px-4 py-3" style={{ minWidth: '200px', maxWidth: '400px' }}>
+                          <div className="text-xs sm:text-sm text-gray-700 whitespace-normal break-words" style={{ wordBreak: 'break-word' }} title={sl.reason || '—'}>
+                            {sl.reason || '—'}
+                          </div>
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap"><span className={statusBadge(sl.status)}>{sl.status}</span></td>
                       </tr>
                     ))}
                   </tbody>

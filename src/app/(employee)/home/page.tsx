@@ -39,17 +39,6 @@ export default function EmployeeDashboard() {
       .finally(() => setLoading(false))
   }, [user])
 
-  // Helper to refresh attendance data
-  const refreshAttendance = () => {
-    const token = localStorage.getItem('authToken')
-    fetch('/api/attendance/today', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((d) => setTodayAttendance(d.attendance || null))
-      .catch(() => {})
-  }
-
   if (isLoading || loading) {
     return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>
   }
@@ -136,7 +125,7 @@ export default function EmployeeDashboard() {
               <Calendar size={20} className="text-green-600" />
             </div>
             <p className="font-medium text-gray-900 text-sm">Apply Leave</p>
-            <p className="text-xs text-gray-400 mt-0.5">Full day or half day</p>
+            <p className="text-xs text-gray-400 mt-0.5">Full day, half day, or short leave</p>
           </Link>
 
           <Link

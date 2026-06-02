@@ -66,31 +66,39 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ Old password verified')
 
-    // Update password in Supabase Auth using admin API
+    // Step 1: Update plain text password in users table FIRST
+    const { error: dbUpdateError } = await supabaseServer
+      .from('users')
+      .update({ 
+        password_hash: newPassword,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id)
+
+    if (dbUpdateError) {
+      console.error('❌ Database password update error:', dbUpdateError)
+      return NextResponse.json({ error: 'Failed to update password in database' }, { status: 500 })
+    }
+
+    console.log('✅ Password updated in users table')
+
+    // Step 2: Update password in Supabase Auth using admin API
     const { error: updateError } = await supabaseServer.auth.admin.updateUserById(
       user.id,
       { password: newPassword }
     )
 
     if (updateError) {
-      console.error('❌ Password update error:', updateError)
+      console.error('❌ Supabase Auth password update error:', updateError)
+      // Rollback database change
+      await supabaseServer
+        .from('users')
+        .update({ password_hash: oldPassword })
+        .eq('id', user.id)
       return NextResponse.json({ error: 'Failed to update password in auth system' }, { status: 500 })
     }
 
     console.log('✅ Password updated in Supabase Auth')
-
-    // Update plain text password in users table
-    const { error: dbUpdateError } = await supabaseServer
-      .from('users')
-      .update({ password_hash: newPassword })
-      .eq('id', user.id)
-
-    if (dbUpdateError) {
-      console.error('❌ Database password update error:', dbUpdateError)
-      return NextResponse.json({ error: 'Failed to sync password in database' }, { status: 500 })
-    }
-
-    console.log('✅ Password updated in users table')
     console.log('✅ Password changed successfully for user:', user.id)
 
     return NextResponse.json({

@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   const [optInWorkingDays, setOptInWorkingDays] = useState<OptInWorkingDay[]>([])
   const [loading, setLoading] = useState(true)
   const [approvingId, setApprovingId] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'attendance' | 'leaves' | 'shortLeaves' | 'optInDays'>('attendance')
+  const [activeTab, setActiveTab] = useState<'attendance' | 'leaves' | 'optInDays'>('attendance')
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showMarkModal, setShowMarkModal] = useState(false)
   const [selectedEmployee, setSelectedEmployee] = useState<{ id: string; name: string; date: string } | null>(null)
@@ -353,13 +353,12 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Total Employees', value: stats?.totalEmployees ?? 0, icon: <Users size={20} />, color: 'text-blue-600 bg-blue-50' },
             { label: 'Present Today', value: stats?.presentToday ?? 0, icon: <CheckCircle size={20} />, color: 'text-green-600 bg-green-50' },
             { label: 'Absent Today', value: stats?.absentToday ?? 0, icon: <XCircle size={20} />, color: 'text-red-600 bg-red-50' },
             { label: 'Pending Leaves', value: stats?.pendingLeaves ?? 0, icon: <Calendar size={20} />, color: 'text-yellow-600 bg-yellow-50' },
-            { label: 'Pending Short Leaves', value: stats?.pendingShortLeaves ?? 0, icon: <Clock size={20} />, color: 'text-orange-600 bg-orange-50' },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${s.color}`}>
@@ -376,18 +375,15 @@ export default function AdminDashboard() {
         {/* Tabs */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="flex border-b border-gray-200 overflow-x-auto">
-            {(['attendance', 'leaves', 'shortLeaves', 'optInDays'] as const).map((tab) => (
+            {(['attendance', 'leaves', 'optInDays'] as const).map((tab) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition whitespace-nowrap ${activeTab === tab ? 'border-black text-black' : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}>
-                {tab === 'attendance' ? <Clock size={16} /> : tab === 'leaves' ? <Calendar size={16} /> : tab === 'optInDays' ? <Calendar size={16} /> : <Clock size={16} />}
-                {tab === 'attendance' ? "Today's Attendance" : tab === 'leaves' ? 'Leave Requests' : tab === 'optInDays' ? 'Working Day Requests' : 'Short Leaves'}
+                {tab === 'attendance' ? <Clock size={16} /> : tab === 'leaves' ? <Calendar size={16} /> : <Calendar size={16} />}
+                {tab === 'attendance' ? "Today's Attendance" : tab === 'leaves' ? 'Leave Requests' : 'Working Day Requests'}
                 {tab === 'attendance' && <span className="ml-1 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">{attendance.length}</span>}
                 {tab === 'leaves' && (stats?.pendingLeaves ?? 0) > 0 && (
                   <span className="ml-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">{stats?.pendingLeaves} pending</span>
-                )}
-                {tab === 'shortLeaves' && (stats?.pendingShortLeaves ?? 0) > 0 && (
-                  <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-bold">{stats?.pendingShortLeaves} pending</span>
                 )}
                 {tab === 'optInDays' && optInWorkingDays.length > 0 && (
                   <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">{optInWorkingDays.length}</span>
@@ -464,7 +460,9 @@ export default function AdminDashboard() {
                           <p>{leave.start_date}</p>
                           {leave.end_date !== leave.start_date && <p className="text-xs text-gray-400">to {leave.end_date}</p>}
                         </td>
-                        <td className="px-6 py-4 text-gray-600 max-w-xs"><p className="truncate">{leave.reason || '—'}</p></td>
+                        <td className="px-6 py-4 text-gray-600" style={{ minWidth: '200px', maxWidth: '350px' }}>
+                          <p className="whitespace-normal break-words">{leave.reason || '—'}</p>
+                        </td>
                         <td className="px-6 py-4">{badge(leave.status)}</td>
                         <td className="px-6 py-4">
                           {leave.status === 'pending' ? (
@@ -490,54 +488,53 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Short Leaves tab */}
-          {activeTab === 'shortLeaves' && (
-            <div className="overflow-x-auto">
-              {loading ? (
-                <div className="py-12 text-center text-gray-400 text-sm">Loading...</div>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      {['Employee', 'Date', 'Type', 'Reason', 'Status', 'Action'].map(h => (
-                        <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {shortLeaves.length === 0 ? (
-                      <tr><td colSpan={6} className="px-6 py-10 text-center text-gray-400">No short leave requests found</td></tr>
-                    ) : shortLeaves.map((sl) => (
-                      <tr key={sl.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <p className="font-medium text-gray-900">{sl.users?.name ?? sl.employee_id}</p>
-                          <p className="text-xs text-gray-400">{sl.users?.email}</p>
-                        </td>
-                        <td className="px-6 py-4 text-gray-700">{sl.date}</td>
-                        <td className="px-6 py-4 capitalize text-gray-700">{sl.short_leave_type}</td>
-                        <td className="px-6 py-4 text-gray-600 max-w-xs"><p className="truncate">{sl.reason || '—'}</p></td>
-                        <td className="px-6 py-4">{badge(sl.status)}</td>
-                        <td className="px-6 py-4">
-                          {sl.status === 'pending' ? (
-                            <div className="flex gap-2">
-                              <button onClick={() => handleShortLeaveAction(sl.id, 'approved')} disabled={approvingId === sl.id}
-                                className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:opacity-50 transition">
-                                Approve
-                              </button>
-                              <button onClick={() => handleShortLeaveAction(sl.id, 'rejected')} disabled={approvingId === sl.id}
-                                className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 transition">
-                                Reject
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-400 capitalize">{sl.status}</span>
-                          )}
-                        </td>
-                      </tr>
+          {/* Short Leaves - shown under leaves tab */}
+          {activeTab === 'leaves' && shortLeaves.length > 0 && (
+            <div className="overflow-x-auto border-t-4 border-orange-100">
+              <div className="px-6 py-3 bg-orange-50 border-b border-orange-200">
+                <h4 className="text-sm font-semibold text-orange-900">Short Leave Requests</h4>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    {['Employee', 'Date', 'Type', 'Reason', 'Status', 'Action'].map(h => (
+                      <th key={h} className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
                     ))}
-                  </tbody>
-                </table>
-              )}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {shortLeaves.map((sl) => (
+                    <tr key={sl.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <p className="font-medium text-gray-900">{sl.users?.name ?? sl.employee_id}</p>
+                        <p className="text-xs text-gray-400">{sl.users?.email}</p>
+                      </td>
+                      <td className="px-6 py-4 text-gray-700">{sl.date}</td>
+                      <td className="px-6 py-4 capitalize text-gray-700">{sl.short_leave_type}</td>
+                      <td className="px-6 py-4 text-gray-600" style={{ minWidth: '200px', maxWidth: '350px' }}>
+                        <p className="whitespace-normal break-words">{sl.reason || '—'}</p>
+                      </td>
+                      <td className="px-6 py-4">{badge(sl.status)}</td>
+                      <td className="px-6 py-4">
+                        {sl.status === 'pending' ? (
+                          <div className="flex gap-2">
+                            <button onClick={() => handleShortLeaveAction(sl.id, 'approved')} disabled={approvingId === sl.id}
+                              className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:opacity-50 transition">
+                              Approve
+                            </button>
+                            <button onClick={() => handleShortLeaveAction(sl.id, 'rejected')} disabled={approvingId === sl.id}
+                              className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 transition">
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 capitalize">{sl.status}</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 

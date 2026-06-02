@@ -164,16 +164,69 @@ export default function AttendancePage() {
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   if (!user)     return null
 
+  // Render UI showing attendance already marked - prevent any action
+  if (!markoutMode && alreadyCheckedIn && !alreadyMarkedOut) {
+    return (
+      <PageWrapper title="Attendance" subtitle="Mark your daily attendance">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+            <CheckCircle size={48} className="text-green-600 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Attendance Already Marked</h2>
+            <p className="text-gray-600 mb-4">You have already checked in for today.</p>
+            <div className="bg-white rounded-lg p-4 mb-4">
+              <p className="text-sm text-gray-500 mb-1">Check-in Time</p>
+              <p className="text-lg font-semibold text-gray-900">{formatTimeIST(todayRecord?.check_in)}</p>
+            </div>
+            {!alreadyMarkedOut && (
+              <button
+                onClick={() => setMarkoutMode(true)}
+                className="px-6 py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition"
+              >
+                <LogOut size={18} className="inline mr-2" />
+                Mark Out
+              </button>
+            )}
+          </div>
+        </div>
+      </PageWrapper>
+    )
+  }
+
+  // Render UI showing both check-in and check-out done
+  if (alreadyCheckedIn && alreadyMarkedOut) {
+    return (
+      <PageWrapper title="Attendance" subtitle="Mark your daily attendance">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center">
+            <CheckCircle size={48} className="text-blue-600 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Attendance Complete</h2>
+            <p className="text-gray-600 mb-4">You have completed your attendance for today.</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white rounded-lg p-4">
+                <p className="text-sm text-gray-500 mb-1">Check-in Time</p>
+                <p className="text-lg font-semibold text-gray-900">{formatTimeIST(todayRecord?.check_in)}</p>
+              </div>
+              <div className="bg-white rounded-lg p-4">
+                <p className="text-sm text-gray-500 mb-1">Mark-out Time</p>
+                <p className="text-lg font-semibold text-gray-900">{formatTimeIST(todayRecord?.check_out)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </PageWrapper>
+    )
+  }
+
   const handleOpenCamera = async () => {
-    // Check if attendance is blocked
-    if (!markoutMode && attendanceBlocked) {
-      setSubmitMsg({ type: 'error', text: blockReason })
+    // Prevent opening camera if already checked in (for check-in mode)
+    if (!markoutMode && alreadyCheckedIn) {
+      setSubmitMsg({ type: 'error', text: 'Attendance already marked for today. You cannot mark again.' })
       return
     }
 
-    // Prevent opening camera if already checked in (for check-in mode)
-    if (!markoutMode && alreadyCheckedIn) {
-      setSubmitMsg({ type: 'error', text: 'Attendance already marked for today' })
+    // Check if attendance is blocked
+    if (!markoutMode && attendanceBlocked) {
+      setSubmitMsg({ type: 'error', text: blockReason })
       return
     }
 
