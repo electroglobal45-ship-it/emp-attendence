@@ -114,7 +114,7 @@ export default function AttendancePage() {
         setBlockReason(check.reason || 'Attendance not allowed today')
       }
       
-      // Check office hours (9 AM - 6 PM)
+      // Check office hours (8 AM - 6:30 PM)
       const now = new Date()
       const istOffset = 5.5 * 60 * 60 * 1000
       const istDate = new Date(now.getTime() + istOffset)
@@ -122,10 +122,10 @@ export default function AttendancePage() {
       const istMinute = istDate.getUTCMinutes()
       const totalMinutes = istHour * 60 + istMinute
       
-      // Before 9:00 AM (540 minutes)
-      if (totalMinutes < 540) {
+      // Before 8:00 AM (480 minutes)
+      if (totalMinutes < 480) {
         setAttendanceBlocked(true)
-        setBlockReason('Too early! Office hours start at 9:00 AM')
+        setBlockReason('Too early! Office hours start at 8:00 AM')
       }
       
       // After 6:30 PM (1110 minutes) - only block check-in, not markout

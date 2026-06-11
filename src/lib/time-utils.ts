@@ -75,13 +75,51 @@ export function formatDateIST(utcTimestamp: string): string {
 export function calculateHours(checkIn: string | null, checkOut: string | null): string {
   if (!checkIn || !checkOut) return '—'
   
-  // Ensure timestamps have Z suffix
-  const checkInTimestamp = checkIn.endsWith('Z') ? checkIn : checkIn + 'Z'
-  const checkOutTimestamp = checkOut.endsWith('Z') ? checkOut : checkOut + 'Z'
-  
-  const start = new Date(checkInTimestamp)
-  const end = new Date(checkOutTimestamp)
-  const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
-  
-  return `${hours.toFixed(1)}h`
+  try {
+    // Handle different timestamp formats
+    let checkInTimestamp = checkIn.trim()
+    let checkOutTimestamp = checkOut.trim()
+    
+    // Convert PostgreSQL format to ISO format
+    if (checkInTimestamp.includes(' ') && !checkInTimestamp.includes('T')) {
+      checkInTimestamp = checkInTimestamp.replace(' ', 'T')
+      if (checkInTimestamp.endsWith('+00')) {
+        checkInTimestamp = checkInTimestamp.replace('+00', 'Z')
+      } else if (!checkInTimestamp.endsWith('Z') && !checkInTimestamp.includes('+')) {
+        checkInTimestamp = checkInTimestamp + 'Z'
+      }
+    } else if (!checkInTimestamp.endsWith('Z') && !checkInTimestamp.includes('+')) {
+      checkInTimestamp = checkInTimestamp + 'Z'
+    }
+    
+    if (checkOutTimestamp.includes(' ') && !checkOutTimestamp.includes('T')) {
+      checkOutTimestamp = checkOutTimestamp.replace(' ', 'T')
+      if (checkOutTimestamp.endsWith('+00')) {
+        checkOutTimestamp = checkOutTimestamp.replace('+00', 'Z')
+      } else if (!checkOutTimestamp.endsWith('Z') && !checkOutTimestamp.includes('+')) {
+        checkOutTimestamp = checkOutTimestamp + 'Z'
+      }
+    } else if (!checkOutTimestamp.endsWith('Z') && !checkOutTimestamp.includes('+')) {
+      checkOutTimestamp = checkOutTimestamp + 'Z'
+    }
+    
+    const start = new Date(checkInTimestamp)
+    const end = new Date(checkOutTimestamp)
+    
+    // Check if dates are valid
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      console.error('Invalid dates for hours calculation:', checkIn, checkOut)
+      return '—'
+    }
+    
+    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
+    
+    // Return — if hours is negative or 0
+    if (hours <= 0) return '—'
+    
+    return `${hours.toFixed(1)}h`
+  } catch (error) {
+    console.error('Error calculating hours:', error, checkIn, checkOut)
+    return '—'
+  }
 }

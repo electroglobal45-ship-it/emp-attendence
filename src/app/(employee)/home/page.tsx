@@ -53,6 +53,32 @@ export default function EmployeeDashboard() {
     >
       <div className="max-w-2xl px-4 sm:px-0 space-y-4 sm:space-y-5 pb-6">
 
+        {/* Office Hours Info Card */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
+              <Clock size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 mb-1">Office Hours</h3>
+              <p className="text-sm text-gray-600 mb-2">Monday to Saturday (except 3rd Saturday)</p>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="bg-white/60 rounded-lg p-2">
+                  <p className="text-xs text-gray-500">Start Time</p>
+                  <p className="font-semibold text-gray-900">8:00 AM</p>
+                </div>
+                <div className="bg-white/60 rounded-lg p-2">
+                  <p className="text-xs text-gray-500">End Time</p>
+                  <p className="font-semibold text-gray-900">6:30 PM</p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                ℹ️ Attendance can be marked from 8:00 AM to 6:30 PM
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Today's attendance card */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4">
